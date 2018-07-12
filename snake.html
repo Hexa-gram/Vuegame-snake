@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #app {
+            font-family: "Avenir", Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 60px;
+        }
+
+        .finish {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- <img src="./assets/logo.png"> -->
+        <h1 v-text="title"></h1>
+        <!-- <h1 v-html = "showlist"></h1> -->
+        <!-- <router-view/> -->
+        <input type="text" v-model="newItem" v-on:keyup.enter="addNew">
+        <ul>
+            <li v-for="item in items " v-bind:class="{finish :item.isFinished} " v-on:click="toggleFinish(item) ">
+                {{item.label}}
+            </li>
+        </ul>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data: function () {
+                return {
+                    title: "this is a todo list",
+                    showlist: "<ul><li>1</li><li>2</li><li>3</li></ul>",
+                    items: [{
+                            label: "java",
+                            isFinished: false
+                        },
+                        {
+                            label: "c++",
+                            isFinished: true
+                        }
+                    ],
+                    newItem: ''
+                };
+            },
+            methods: {
+                toggleFinish: function (ops) {
+                    ops.isFinished = !ops.isFinished;
+                },
+                addNew: function () {
+                    this.items.push({
+                        label: this.newItem,
+                        isFinished: false
+                    })
+                    this.newItem = ''
+                }
+            },
+            components: {}
+        });
+    </script>
+</body>
+
+</html>
