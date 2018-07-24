@@ -7,6 +7,25 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        ul li {
+            list-style-type: none;
+            margin: 0;
+        }
+
+        ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            height: 20px;
+            width: 100%;
+        }
+
         #app {
             font-family: "Avenir", Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -16,24 +35,64 @@
             margin-top: 60px;
         }
 
-        .finish {
-            text-decoration: underline;
+        .BigTitle {
+            color: #2c3e50;
+        }
+
+        .play {
+            display: inline-block;
+            margin-right: 30px;
+            background: #5492FF;
+            padding: 6px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .score {
+            display: inline-block;
+            /* width: 100px; */
+        }
+
+        .main {
+            width: 402px;
+            margin: 20px auto;
+            border: 1px solid #5492FF;
+            height: 480px;
+        }
+
+        .restart {
+            width: 300px;
+            margin: 200px auto;
+        }
+
+        .span {
+            background: #666;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
         }
     </style>
 </head>
 
 <body>
+    <!-- style = "display: none" -->
     <div id="app">
-        <!-- <img src="./assets/logo.png"> -->
-        <h1 v-text="title"></h1>
-        <!-- <h1 v-html = "showlist"></h1> -->
-        <!-- <router-view/> -->
-        <input type="text" v-model="newItem" v-on:keyup.enter="addNew">
-        <ul>
-            <li v-for="item in items " v-bind:class="{finish :item.isFinished} " v-on:click="toggleFinish(item) ">
-                {{item.label}}
-            </li>
-        </ul>
+        <h1 class="BigTitle">{{title}}</h1>
+        <!-- <div v-model="msg"></div> -->
+        <div class="play" @click="play()">{{start}}</div>
+        <!-- <div class="score">score：{{score}} 分</div> -->
+        <div class="main">
+            <div v-if="!alive" class="restart">
+                <div>Challenge failure, score:{{score}}</div>
+                <div class="play" @click="play()">Again</div>
+            </div>
+            <ul v-else>
+                <li v-for="k in col">
+                    <span v-for="n in row" class="span" :data="k+','+n"></span>
+                </li>
+            </ul>
+        </div>
     </div>
 
 
@@ -42,36 +101,104 @@
     <script>
         new Vue({
             el: "#app",
-            data: function () {
+            data: () => {
                 return {
-                    title: "this is a todo list",
-                    showlist: "<ul><li>1</li><li>2</li><li>3</li></ul>",
-                    items: [{
-                            label: "java",
-                            isFinished: false
-                        },
-                        {
-                            label: "c++",
-                            isFinished: true
-                        }
+                    title: 'Demo', //'欢迎来到 贪食蛇'
+                    score: 0,
+                    start: 'test', //开始玩耍
+                    alive: true,
+                    row: 20,
+                    col: 24,
+                    direct: 'up',
+                    food: [],
+                    snake: [
+                        [0, 3],
+                        [1, 3],
+                        [2, 3]
                     ],
-                    newItem: ''
                 };
             },
             methods: {
-                toggleFinish: function (ops) {
-                    ops.isFinished = !ops.isFinished;
+                play: function () {
+                    this.alive = true;
+                    this.initSnake();
+                    this.initFood();
+                    document.onkeydown = (e) => {
+                        this.move(e);
+                    }
                 },
-                addNew: function () {
-                    this.items.push({
-                        label: this.newItem,
-                        isFinished: false
-                    })
-                    this.newItem = ''
+                getRadom: (n) => {
+                    return Math.random() * n;
+                },
+                initSnake: function () {
+                    this.snake = [
+                        [0, 3],
+                        [1, 3],
+                        [2, 3]
+                    ];
+                    // let toward;
+                    // if (Math.round(Math.random() * 10) > 0.5) {
+                    //     toward = 'row';
+                    // } else {
+                    //     toward = 'col';
+                    // }
+                    // console.log(toward);
+                    // let x = 3 * 20;
+                    // let y = 1 * 20;
+                    // this.getRadom();
+                    // console.log(this);
+                },
+                initFood: function () {
+                    let Food_x = this.getRadom(this.row);
+                    let Food_y = this.getRadom(this.col);
+                    let flag = false;
+                    for (let i = 0; i < this.snake.length; i++) {
+                        //考虑新生蛋位置与蛇身重合
+                        if (this.snake[i].toString() == [Food_x, Food_y].toString()) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    this.food = flag == true ? this.initFood() : [Food_x, Food_y];
+                },
+                move: (e) => {
+                    console.log(e.keyCode);
+                    switch (e.keyCode) {
+                        case 87:
+                        case 38:
+                            break;
+                        case 83:
+                        case 40:
+                            break;
+                        case 65:
+                        case 37:
+                            break;
+                        case 68:
+                        case 39:
+                            break;
+                        default:
+                            // alert('请按上下左右或asdw');
+                            break;
+                    }
+                },
+                isDie: function (x, y) {
+                    //撞到边界
+                    if (x < 0 || x >= col || y > row || y < 0) {
+                        this.alive = false;
+                        return;
+                    }
+                    //吃到自己
+                    for (var i = 0; i < this.snake.length; i++) {
+                        if (this.snake[i].toString() == [x, y].toString()) {
+                            this.alive = false;
+                            return;
+                        }
+                    }
                 }
             },
             components: {}
         });
+        // document.getElementById('app').style.display = 'block';
     </script>
 </body>
 
