@@ -89,7 +89,7 @@
             </div>
             <ul v-else>
                 <li v-for="k in col">
-                    <span v-for="n in row" class="span" :data="k+','+n"></span>
+                    <span v-for="n in row" class="span" :data="(n-1) +','+ (k-1)"></span>
                 </li>
             </ul>
         </div>
@@ -105,6 +105,8 @@
                 return {
                     title: 'Demo', //'欢迎来到 贪食蛇'
                     score: 0,
+                    time: 100,
+                    timer: null,
                     start: 'test', //开始玩耍
                     alive: true,
                     row: 20,
@@ -123,7 +125,7 @@
                     this.alive = true;
                     this.initSnake();
                     this.initFood();
-                    document.onkeydown = (e) => {
+                    document.onkeydown = () => {
                         this.move(e);
                     }
                 },
@@ -161,36 +163,62 @@
                     }
                     this.food = flag == true ? this.initFood() : [Food_x, Food_y];
                 },
-                move: (e) => {
-                    console.log(e.keyCode);
-                    switch (e.keyCode) {
-                        case 87:
-                        case 38:
-                            break;
-                        case 83:
-                        case 40:
-                            break;
-                        case 65:
-                        case 37:
-                            break;
-                        case 68:
-                        case 39:
-                            break;
-                        default:
-                            // alert('请按上下左右或asdw');
-                            break;
+                eatFood: function (x, y) {
+                    if (x == this.food[0] && y == this.food[1]) {
+                        this.snake.push(food);
+                        this.score++;
+                        this.initFood();
+                    } else {
+                        this.snake.shift();
+                        this.snake.push([x, y]);
                     }
+                },
+                move: function (e) {
+                    console.log(e.keyCode);
+                    timer = setInterval(function () {
+                        let position = this.snake[this.snake.length - 1];
+                        let x = position[0];
+                        let y = position[1];
+                        switch (e.keyCode) {
+                            case 87:
+                            case 38:
+                                this.direct = this.direct == 'down' ? 'down' : 'up' && y--;
+                                break;
+                            case 83:
+                            case 40:
+                                this.direct = this.direct == 'up' ? 'up' : 'down' && y++;
+                                break;
+                            case 65:
+                            case 37:
+                                this.direct = this.direct == 'right' ? 'right' : 'left' && x--;
+                                break;
+                            case 68:
+                            case 39:
+                                this.direct = this.direct == 'left' ? 'left' : 'right' && x++;
+                                break;
+                            default:
+                                // alert('请按上下左右或asdw');
+                                break;
+                        }
+                        console.log(this.direct);
+                        this.isDie(x, y);
+                        this.alive && this.eatFood(x, y);
+                    }, time);
                 },
                 isDie: function (x, y) {
                     //撞到边界
                     if (x < 0 || x >= col || y > row || y < 0) {
                         this.alive = false;
+                        clear(this.timer);
+                        this.timer = null;
                         return;
                     }
                     //吃到自己
                     for (var i = 0; i < this.snake.length; i++) {
                         if (this.snake[i].toString() == [x, y].toString()) {
                             this.alive = false;
+                            clear(this.timer);
+                            this.timer = null;
                             return;
                         }
                     }
