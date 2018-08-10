@@ -39,7 +39,7 @@
             color: #2c3e50;
         }
 
-        .play {
+        .btn {
             display: inline-block;
             margin-right: 30px;
             background: #5492FF;
@@ -60,9 +60,17 @@
             height: 480px;
         }
 
+        .again {
+            margin-right: 0;
+        }
+
         .restart {
             width: 300px;
-            margin: 200px auto;
+            margin: 170px auto;
+        }
+
+        .restartText {
+            margin-bottom: 30px;
         }
 
         .span {
@@ -72,6 +80,14 @@
             height: 20px;
             border: 1px solid #000;
         }
+
+        .snack {
+            background: red;
+        }
+
+        .food {
+            background: yellow;
+        }
     </style>
 </head>
 
@@ -80,14 +96,14 @@
     <div id="app">
         <h1 class="BigTitle">{{title}}</h1>
         <!-- <div v-model="msg"></div> -->
-        <div class="play" @click="play()">{{start}}</div>
-        <!-- <div class="score">score：{{score}} 分</div> -->
+        <div class="btn" @click="play()" v-if="isStart">{{start}}</div>
+        <div class="score">score：{{score}} 分</div>
         <div class="main">
-            <div v-if="!alive" class="restart">
-                <div>Challenge failure, score:{{score}}</div>
-                <div class="play" @click="play()">Again</div>
+            <div v-show="!alive" class="restart">
+                <div class="restartText">Challenge failure, score:{{score}}</div>
+                <div class="btn again" @click="play()">{{again}}</div>
             </div>
-            <ul v-else>
+            <ul v-show="alive">
                 <li v-for="k in col">
                     <span v-for="n in row" class="span" :data="(n-1) +','+ (k-1)"></span>
                 </li>
@@ -103,34 +119,55 @@
             el: "#app",
             data: () => {
                 return {
-                    title: 'Demo', //'欢迎来到 贪食蛇'
+                    title: '欢迎来到 贪食蛇',
+                    start: '开始玩耍',
+                    again: '再来一次',
                     score: 0,
-                    time: 100,
+                    time: 100, //设置蛇的速度
                     timer: null,
-                    start: 'test', //开始玩耍
+                    isStart: true,
                     alive: true,
                     row: 20,
                     col: 24,
-                    direct: 'up',
+                    direct: 'right',
                     food: [],
                     snake: [
                         [0, 3],
                         [1, 3],
                         [2, 3]
                     ],
+                    delay: true, //设置延迟防止两个键一起按
                 };
             },
             methods: {
                 play: function () {
+                    this.isStart = false;
                     this.alive = true;
+                    this.delay = true;
+                    this.score = 0;
+                    this.direct = 'right';
+                    for (let i = 0; i < this.snake.length; i++) {
+                        document.querySelector(`[data="${this.snake[i].toString()}"]`).className = "span";
+                    }
+                    if (document.querySelectorAll('.food').length > 0) {
+                        document.querySelector('.food').className = "span";
+                    }
                     this.initSnake();
                     this.initFood();
-                    document.onkeydown = () => {
-                        this.move(e);
+                    document.addEventListener('keydown', this.control); //避免重复绑定
+                },
+                control: function (e) {
+                    if (!this.delay) {
+                        return;
                     }
+                    this.move(e);
+                    this.delay = false;
+                    setTimeout(() => {
+                        this.delay = true;
+                    }, this.time - 50)
                 },
                 getRadom: (n) => {
-                    return Math.random() * n;
+                    return parseInt(Math.random() * n);
                 },
                 initSnake: function () {
                     this.snake = [
@@ -138,17 +175,10 @@
                         [1, 3],
                         [2, 3]
                     ];
-                    // let toward;
-                    // if (Math.round(Math.random() * 10) > 0.5) {
-                    //     toward = 'row';
-                    // } else {
-                    //     toward = 'col';
-                    // }
-                    // console.log(toward);
-                    // let x = 3 * 20;
-                    // let y = 1 * 20;
-                    // this.getRadom();
-                    // console.log(this);
+                    for (let i = 0; i < this.snake.length; i++) {
+                        document.querySelector(`[data="${this.snake[i].toString()}"]`).className =
+                            "span snack";
+                    }
                 },
                 initFood: function () {
                     let Food_x = this.getRadom(this.row);
@@ -161,72 +191,111 @@
                             break;
                         }
                     }
-                    this.food = flag == true ? this.initFood() : [Food_x, Food_y];
-                },
-                eatFood: function (x, y) {
-                    if (x == this.food[0] && y == this.food[1]) {
-                        this.snake.push(food);
-                        this.score++;
+
+                    if (flag) {
                         this.initFood();
                     } else {
-                        this.snake.shift();
-                        this.snake.push([x, y]);
+                        this.food = [Food_x, Food_y];
+                        document.querySelector(`[data="${this.food.toString()}"]`).className = "span food";
                     }
                 },
+
                 move: function (e) {
+                    // let e = window.event || arguments[0];
                     console.log(e.keyCode);
-                    timer = setInterval(function () {
+                    let _this = this;
+                    clearInterval(this.timer);
+                    this.timer = setInterval(() => {
                         let position = this.snake[this.snake.length - 1];
                         let x = position[0];
                         let y = position[1];
                         switch (e.keyCode) {
-                            case 87:
+                            case 87: //上
                             case 38:
-                                this.direct = this.direct == 'down' ? 'down' : 'up' && y--;
+                                if (this.direct == 'down') {
+                                    break;
+                                } else {
+                                    // y--;
+                                    this.direct = 'up';
+                                }
                                 break;
-                            case 83:
+                            case 83: //下
                             case 40:
-                                this.direct = this.direct == 'up' ? 'up' : 'down' && y++;
+                                if (this.direct == 'up') {
+                                    break;
+                                } else {
+                                    // y++;
+                                    this.direct = 'down';
+                                }
                                 break;
-                            case 65:
+                            case 65: //左
                             case 37:
-                                this.direct = this.direct == 'right' ? 'right' : 'left' && x--;
+                                if (this.direct == 'right') {
+                                    break;
+                                } else {
+                                    // x--;
+                                    this.direct = 'left';
+                                }
                                 break;
-                            case 68:
+                            case 68: //右
                             case 39:
-                                this.direct = this.direct == 'left' ? 'left' : 'right' && x++;
+                                if (this.direct == 'left') {
+                                    break;
+                                } else {
+                                    // x++;
+                                    this.direct = 'right';
+                                }
                                 break;
                             default:
                                 // alert('请按上下左右或asdw');
                                 break;
                         }
-                        console.log(this.direct);
+                        this.direct == 'right' ? x++ :
+                            (this.direct == 'left' ? x-- :
+                                (this.direct == 'down' ? y++ : y--))
+
                         this.isDie(x, y);
-                        this.alive && this.eatFood(x, y);
-                    }, time);
+                        this.eatFood(x, y);
+                    }, this.time);
+                },
+                eatFood: function (x, y) {
+                    if (this.alive) {
+                        if (x == this.food[0] && y == this.food[1]) {
+                            this.snake.push(this.food);
+                            this.score++;
+                            this.initFood();
+                        } else {
+                            document.querySelector(`[data="${this.snake[0]}"]`).className = "span";
+                            this.snake.shift();
+                            this.snake.push([x, y]);
+                        }
+                        document.querySelector(`[data="${x},${y}"]`).className = "span snack";
+                    }
                 },
                 isDie: function (x, y) {
                     //撞到边界
-                    if (x < 0 || x >= col || y > row || y < 0) {
+                    if (x < 0 || x >= this.row || y >= this.col || y < 0) {
                         this.alive = false;
-                        clear(this.timer);
+                        this.isStart = true;
+                        clearInterval(this.timer);
                         this.timer = null;
+                        document.removeEventListener('keydown', this.control);
                         return;
                     }
                     //吃到自己
-                    for (var i = 0; i < this.snake.length; i++) {
+                    for (var i = 0; i < this.snake.length - 1; i++) {
                         if (this.snake[i].toString() == [x, y].toString()) {
                             this.alive = false;
-                            clear(this.timer);
+                            this.isStart = true;
+                            clearInterval(this.timer);
                             this.timer = null;
+                            document.removeEventListener('keydown', this.control);
                             return;
                         }
                     }
                 }
             },
-            components: {}
         });
-        // document.getElementById('app').style.display = 'block';
     </script>
 </body>
 
