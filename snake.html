@@ -50,14 +50,37 @@
 
         .score {
             display: inline-block;
-            /* width: 100px; */
+            height: 35px;
+            line-height: 35px;
+            vertical-align: top;
         }
 
         .main {
+            position: relative;
             width: 402px;
             margin: 20px auto;
-            border: 1px solid #5492FF;
             height: 480px;
+        }
+        .main.die {
+            border: 1px solid #5492FF;
+        }
+
+        .pause-mask {
+            position: absolute;
+            width: 402px;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            background: rgba(238, 238, 238, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pause-mask .text {
+            color: #5492FF;
+            font-size: 20px;
+            font-weight: bold;
         }
 
         .again {
@@ -84,6 +107,9 @@
         .snack {
             background: red;
         }
+        .snack.head{
+            background: green;
+        }
 
         .food {
             background: yellow;
@@ -98,7 +124,10 @@
         <!-- <div v-model="msg"></div> -->
         <div class="btn" @click="play()" v-if="isStart">{{start}}</div>
         <div class="score">score：{{score}} 分</div>
-        <div class="main">
+        <div class="main" :class="{ 'die': !alive }">
+            <div v-show="isPause" class="pause-mask">
+                <span class="text">已暂停, 空格继续</span>
+            </div>
             <div v-show="!alive" class="restart">
                 <div class="restartText">Challenge failure, score:{{score}}</div>
                 <div class="btn again" @click="play()">{{again}}</div>
@@ -109,6 +138,7 @@
                 </li>
             </ul>
         </div>
+        
     </div>
 
 
@@ -137,6 +167,7 @@
                         [2, 3]
                     ],
                     delay: true, //设置延迟防止两个键一起按
+                    isPause: false // 是否暂停
                 };
             },
             methods: {
@@ -160,11 +191,21 @@
                     if (!this.delay) {
                         return;
                     }
-                    this.move(e);
+                    // 暂停
+                    if (e.keyCode === 32) {
+                        if (this.alive) {
+                            this.pause()
+                        } else {
+                            this.play()
+                        }
+                        return
+                    } else {
+                        this.move(e);
+                    }
                     this.delay = false;
                     setTimeout(() => {
                         this.delay = true;
-                    }, this.time - 50)
+                    }, this.time - 80)
                 },
                 getRadom: (n) => {
                     return parseInt(Math.random() * n);
@@ -201,8 +242,8 @@
                 },
 
                 move: function (e) {
-                    // let e = window.event || arguments[0];
                     // console.log(e.keyCode);
+                    if (this.isPause) return
                     let _this = this;
                     clearInterval(this.timer);
                     this.timer = setInterval(() => {
@@ -285,13 +326,25 @@
                         this._reset()
                     }
                 },
+                // 暂停
+                pause () {
+                    if (this.isPause) {
+                        // 看最后一次方向
+                        
+                    } else {
+                        clearInterval(this.timer);
+                        this.timer = null;
+                    }
+                    this.isPause = !this.isPause
+                    
+                },
                 // 重置
                 _reset: function () {
                     this.alive = false;
                     this.isStart = true;
                     clearInterval(this.timer);
                     this.timer = null;
-                    document.removeEventListener('keydown', this.control);
+                    // document.removeEventListener('keydown', this.control);
                 }
             },
         });
