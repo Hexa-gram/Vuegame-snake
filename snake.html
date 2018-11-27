@@ -202,7 +202,7 @@
 
                 move: function (e) {
                     // let e = window.event || arguments[0];
-                    console.log(e.keyCode);
+                    // console.log(e.keyCode);
                     let _this = this;
                     clearInterval(this.timer);
                     this.timer = setInterval(() => {
@@ -272,27 +272,26 @@
                         document.querySelector(`[data="${x},${y}"]`).className = "span snack";
                     }
                 },
+                // 判断是否死亡
                 isDie: function (x, y) {
                     //撞到边界
                     if (x < 0 || x >= this.row || y >= this.col || y < 0) {
-                        this.alive = false;
-                        this.isStart = true;
-                        clearInterval(this.timer);
-                        this.timer = null;
-                        document.removeEventListener('keydown', this.control);
+                        this._reset()
                         return;
                     }
                     //吃到自己
-                    for (var i = 0; i < this.snake.length - 1; i++) {
-                        if (this.snake[i].toString() == [x, y].toString()) {
-                            this.alive = false;
-                            this.isStart = true;
-                            clearInterval(this.timer);
-                            this.timer = null;
-                            document.removeEventListener('keydown', this.control);
-                            return;
-                        }
+                    const isEatSelf = this.snake.some(element => element.toString() === [x, y].toString())
+                    if (isEatSelf) {
+                        this._reset()
                     }
+                },
+                // 重置
+                _reset: function () {
+                    this.alive = false;
+                    this.isStart = true;
+                    clearInterval(this.timer);
+                    this.timer = null;
+                    document.removeEventListener('keydown', this.control);
                 }
             },
         });
